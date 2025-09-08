@@ -46,7 +46,7 @@ const formatTimestamp = (iso: string) => {
           <p className="text-sm text-gray-600">Your recent generations</p>
         </div>
       </div>
-      <div className="max-h-[58.2vh] overflow-x-hidden">
+      <div className="max-h-[62vh] overflow-x-hidden">
         {history.length === 0 ? (
           <div className="text-center py-8">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
