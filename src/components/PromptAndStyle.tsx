@@ -143,7 +143,7 @@ const PromptAndStyle: React.FC<PromptAndStyleProps> = ({
         <div className="bg-gray-50 rounded-lg p-4 mt-4">
           <div className="flex items-center gap-2 mb-3">
             <Eye className="h-4 w-4 text-gray-600" />
-            <h4 className="font-medium text-gray-900">Preview Summary</h4>
+            <h4 className="font-medium text-gray-900">Live Summary</h4>
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex items-start gap-2">

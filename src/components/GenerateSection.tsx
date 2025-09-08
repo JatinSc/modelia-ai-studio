@@ -22,14 +22,20 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleGenerate = async () => {
-    if (!uploadedImage || !prompt.trim()) return;
+const handleGenerate = async () => {
+  if (!uploadedImage || !prompt.trim()) return;
 
-    setLoading(true);
-    setError(null);
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+  setLoading(true);
+  setError(null);
+  const controller = new AbortController();
+  abortControllerRef.current = controller;
 
+  const maxAttempts = 3;
+  let attempts = 0;
+
+  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+  while (attempts < maxAttempts) {
     try {
       const result = await mockGenerate({
         imageDataUrl: uploadedImage,
@@ -39,19 +45,29 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
       });
       setGenerated(result);
       addToHistory(result);
-      setShowModal(true); // 👈 open modal after success
+      setShowModal(true);
+      break; // success, exit the loop
     } catch (err: any) {
       if (err.name === "AbortError") {
         console.log("Generation aborted by user");
+        break; // exit loop if user aborted
+      }
+      attempts++;
+      if (attempts < maxAttempts) {
+        const delay = 2 ** attempts * 500; // exponential backoff
+        console.log(`Retrying in ${delay}ms... (attempt ${attempts})`);
+        await wait(delay);
       } else {
         console.error("Generation failed:", err);
         setError("Generation failed. Please try again.");
       }
-    } finally {
-      setLoading(false);
-      abortControllerRef.current = null;
     }
-  };
+  }
+
+  setLoading(false);
+  abortControllerRef.current = null;
+};
+
 
   const handleAbort = () => {
     abortControllerRef.current?.abort();
