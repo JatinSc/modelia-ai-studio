@@ -36,7 +36,7 @@ const PromptAndStyle: React.FC<PromptAndStyleProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-5 mb-6">
         <div className="p-2 bg-indigo-100 rounded-lg">
           <Type className="h-5 w-5 text-indigo-600" />
         </div>
@@ -75,7 +75,7 @@ const PromptAndStyle: React.FC<PromptAndStyleProps> = ({
         </div>
       </div>
       {/* Style Selection */}
-      <div>
+      <div className="mt-4">
         <label className="block text-sm font-medium text-gray-700 mb-3">
           Style
         </label>
@@ -140,7 +140,7 @@ const PromptAndStyle: React.FC<PromptAndStyleProps> = ({
       </div>
       {/* Live Preview Summary */}
       {(prompt.trim() || preview) && (
-        <div className="bg-gray-50 rounded-lg p-4 mt-4">
+        <div className="bg-gray-50 rounded-lg p-4 mt-7">
           <div className="flex items-center gap-2 mb-3">
             <Eye className="h-4 w-4 text-gray-600" />
             <h4 className="font-medium text-gray-900">Live Summary</h4>

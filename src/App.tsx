@@ -31,32 +31,6 @@ const App: React.FC = () => {
   };
 
   return (
-    // <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen space-y-8">
-    //   <h1 className="text-3xl font-bold mb-4 text-gray-900">AI Studio</h1>
-
-    //   <UploadImage
-    //     onImageUpload={setUploadedImage}
-    //     onError={(err) => console.error(err)}
-    //     uploadedImage={uploadedImage}
-    //   />
-
-    //   <PromptAndStyle
-    //     prompt={prompt}
-    //     setPrompt={setPrompt}
-    //     selectedStyle={style}
-    //     setSelectedStyle={setStyle}
-    //     preview={uploadedImage}
-    //   />
-
-    //   <GenerateSection
-    //     uploadedImage={uploadedImage}
-    //     prompt={prompt}
-    //     style={style}
-    //     addToHistory={addToHistory}
-    //   />
-
-    //   <HistorySection history={history} onRestore={restoreFromHistory} />
-    // </div>
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
@@ -73,8 +47,8 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className=" w-[100%] flex flex-row ">
+      <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ">
+        <div className=" w-[100%] flex flex-row">
           {/* Left Column */}
           <div className="w-[100%] flex flex-row gap-5">
             {/* Upload + Prompt/Style side by side */}
@@ -92,7 +66,7 @@ const App: React.FC = () => {
                   addToHistory={addToHistory}
                 />
               </div>
-              <div className="min-w-[65%]">
+              <div className="min-w-[65%] min-h-[70vh]">
                 <PromptAndStyle
                   prompt={prompt}
                   setPrompt={setPrompt}
@@ -103,7 +77,10 @@ const App: React.FC = () => {
               </div>
             </div>
             <div className="w-[25%]">
-              <HistorySection history={history} onRestore={restoreFromHistory} />
+              <HistorySection
+                history={history}
+                onRestore={restoreFromHistory}
+              />
             </div>
           </div>
 
