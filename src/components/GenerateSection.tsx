@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Loader2, Download, XCircle } from "lucide-react";
 import { mockGenerate, type GenerateResponse } from "../utils/mockApi";
 
@@ -22,52 +22,56 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-const handleGenerate = async () => {
-  if (!uploadedImage || !prompt.trim()) return;
+  // Lock scroll when modal is open
+  useEffect(() => {
+    if (showModal) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+  }, [showModal]);
 
-  setLoading(true);
-  setError(null);
-  const controller = new AbortController();
-  abortControllerRef.current = controller;
+  const handleGenerate = async () => {
+    if (!uploadedImage || !prompt.trim()) return;
 
-  const maxAttempts = 3;
-  let attempts = 0;
+    setLoading(true);
+    setError(null);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
+    const maxAttempts = 3;
+    let attempts = 0;
+    const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-  while (attempts < maxAttempts) {
-    try {
-      const result = await mockGenerate({
-        imageDataUrl: uploadedImage,
-        prompt,
-        style,
-        signal: controller.signal,
-      });
-      setGenerated(result);
-      addToHistory(result);
-      setShowModal(true);
-      break; // success, exit the loop
-    } catch (err: any) {
-      if (err.name === "AbortError") {
-        console.log("Generation aborted by user");
-        break; // exit loop if user aborted
-      }
-      attempts++;
-      if (attempts < maxAttempts) {
-        const delay = 2 ** attempts * 500; // exponential backoff
-        console.log(`Retrying in ${delay}ms... (attempt ${attempts})`);
-        await wait(delay);
-      } else {
-        console.error("Generation failed:", err);
-        setError("Generation failed. Please try again.");
+    while (attempts < maxAttempts) {
+      try {
+        const result = await mockGenerate({
+          imageDataUrl: uploadedImage,
+          prompt,
+          style,
+          signal: controller.signal,
+        });
+        setGenerated(result);
+        addToHistory(result);
+        setShowModal(true);
+        break; // success
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          console.log("Generation aborted by user");
+          break;
+        }
+        attempts++;
+        if (attempts < maxAttempts) {
+          const delay = 2 ** attempts * 500;
+          console.log(`Retrying in ${delay}ms (attempt ${attempts})`);
+          await wait(delay);
+        } else {
+          console.error("Generation failed:", err);
+          setError("Generation failed. Please try again.");
+        }
       }
     }
-  }
 
-  setLoading(false);
-  abortControllerRef.current = null;
-};
-
+    setLoading(false);
+    abortControllerRef.current = null;
+  };
 
   const handleAbort = () => {
     abortControllerRef.current?.abort();
@@ -82,104 +86,101 @@ const handleGenerate = async () => {
     link.click();
   };
 
-return (
-  <>
-    <div
-      className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-      role="region"
-      aria-labelledby="generate-section-title"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h2
-          id="generate-section-title"
-          className="text-lg font-semibold text-gray-900"
-        >
-          Generate
-        </h2>
-        {error && (
-          <p
-            className="text-sm text-red-600"
-            role="alert"
-            aria-live="assertive"
-          >
-            {error}
-          </p>
-        )}
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          onClick={handleGenerate}
-          disabled={!uploadedImage || !prompt.trim() || loading}
-          className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          aria-disabled={!uploadedImage || !prompt.trim() || loading}
-        >
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          {loading ? "Generating..." : "Generate Image"}
-        </button>
-
-        {loading && (
-          <button
-            onClick={handleAbort}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            <XCircle className="h-4 w-4" />
-            Cancel
-          </button>
-        )}
-      </div>
-    </div>
-
-    {/* Modal */}
-    {showModal && generated && (
+  return (
+    <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="generated-image-title"
-        aria-describedby="generated-image-desc"
+        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        role="region"
+        aria-labelledby="generate-section-title"
       >
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-          {/* Close button */}
-          <button
-            onClick={() => setShowModal(false)}
-            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            aria-label="Close generated image modal"
+        <div className="flex items-center justify-between mb-4">
+          <h2
+            id="generate-section-title"
+            className="text-lg font-semibold text-gray-900"
           >
-            <XCircle className="h-6 w-6" />
+            Generate
+          </h2>
+          {error && (
+            <p
+              data-testid="error-message"
+              className="text-red-600 mt-3 font-medium"
+            >
+              {error}
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={handleGenerate}
+            disabled={!uploadedImage || !prompt.trim() || loading}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            aria-disabled={!uploadedImage || !prompt.trim() || loading}
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? "Generating..." : "Generate Image"}
           </button>
 
-          <h3
-            id="generated-image-title"
-            className="text-lg font-semibold mb-4 text-gray-900"
-          >
-            Generated Image
-          </h3>
-
-          <div className="rounded-lg overflow-hidden border mb-4">
-            <img
-              src={generated.imageUrl}
-              alt={`Generated image for prompt: ${generated.prompt}`}
-              className="w-full h-64 object-cover"
-              id="generated-image-desc"
-            />
-          </div>
-
-          <div className="flex justify-end">
+          {loading && (
             <button
-              onClick={handleDownload}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              onClick={handleAbort}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             >
-              <Download className="h-4 w-4" />
-              Download
+              <XCircle className="h-4 w-4" />
+              Cancel
             </button>
-          </div>
+          )}
         </div>
       </div>
-    )}
-  </>
-);
 
+      {/* Modal */}
+      {showModal && generated && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="generated-image-title"
+          aria-describedby="generated-image-desc"
+        >
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              aria-label="Close generated image modal"
+            >
+              <XCircle className="h-6 w-6" />
+            </button>
+
+            <h3
+              id="generated-image-title"
+              className="text-lg font-semibold mb-4 text-gray-900"
+            >
+              Generated Image
+            </h3>
+
+            <div className="rounded-lg overflow-hidden border mb-4">
+              <img
+                src={generated.imageUrl}
+                alt={`Generated image for prompt: ${generated.prompt}`}
+                className="w-full h-64 object-cover"
+                id="generated-image-desc"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default GenerateSection;
