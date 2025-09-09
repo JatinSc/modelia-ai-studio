@@ -28,6 +28,21 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
     else document.body.style.overflow = "";
   }, [showModal]);
 
+  // Convert Blob to Base64
+  const blobToBase64 = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+  const saveToLocalStorage = (item: GenerateResponse) => {
+    const history = JSON.parse(localStorage.getItem("generatedImages") || "[]");
+    history.push(item);
+    localStorage.setItem("generatedImages", JSON.stringify(history));
+  };
+
   const handleGenerate = async () => {
     if (!uploadedImage || !prompt.trim()) return;
 
@@ -48,8 +63,18 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
           style,
           signal: controller.signal,
         });
+
+        // Convert Blob URL to Base64 if needed
+        if (result.imageUrl.startsWith("blob:")) {
+          const response = await fetch(result.imageUrl);
+          const blob = await response.blob();
+          const base64 = await blobToBase64(blob);
+          result.imageUrl = base64;
+        }
+
         setGenerated(result);
         addToHistory(result);
+        saveToLocalStorage(result); // persist in localStorage
         setShowModal(true);
         break; // success
       } catch (err: unknown) {
@@ -62,7 +87,7 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
           if (attempts < maxAttempts) {
             const delay = 2 ** attempts * 500;
             console.log(`Retrying in ${delay}ms (attempt ${attempts})`);
-            await wait(delay)
+            await wait(delay);
           } else {
             console.error("Generation failed:", err.message);
             setError("Generation failed. Please try again.");
