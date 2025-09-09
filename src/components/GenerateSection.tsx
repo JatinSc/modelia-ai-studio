@@ -52,19 +52,21 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
         addToHistory(result);
         setShowModal(true);
         break; // success
-      } catch (err: any) {
-        if (err.name === "AbortError") {
-          console.log("Generation aborted by user");
-          break;
-        }
-        attempts++;
-        if (attempts < maxAttempts) {
-          const delay = 2 ** attempts * 500;
-          console.log(`Retrying in ${delay}ms (attempt ${attempts})`);
-          await wait(delay);
-        } else {
-          console.error("Generation failed:", err);
-          setError("Generation failed. Please try again.");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          if (err.name === "AbortError") {
+            console.log("Generation aborted by user");
+            break;
+          }
+          attempts++;
+          if (attempts < maxAttempts) {
+            const delay = 2 ** attempts * 500;
+            console.log(`Retrying in ${delay}ms (attempt ${attempts})`);
+            await wait(delay);
+          } else {
+            console.error("Generation failed:", err.message);
+            setError("Generation failed. Please try again.");
+          }
         }
       }
     }
