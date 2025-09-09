@@ -62,7 +62,7 @@ const GenerateSection: React.FC<GenerateSectionProps> = ({
           if (attempts < maxAttempts) {
             const delay = 2 ** attempts * 500;
             console.log(`Retrying in ${delay}ms (attempt ${attempts})`);
-            await wait(delay);
+            await wait(delay)
           } else {
             console.error("Generation failed:", err.message);
             setError("Generation failed. Please try again.");
